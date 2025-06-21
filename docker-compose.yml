@@ -1,0 +1,12 @@
+rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      # New, more robust test: Use 'rabbitmq-diagnostics ping'.
+      # This command will only succeed if the broker is fully responsive.
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
