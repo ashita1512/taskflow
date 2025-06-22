@@ -1,12 +1,64 @@
-rabbitmq:
+# FINAL VERSION - Using host networking for RabbitMQ
+
+services:
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
     image: rabbitmq:3.13-management
     ports:
       - "5672:5672"
       - "15672:15672"
     healthcheck:
-      # New, more robust test: Use 'rabbitmq-diagnostics ping'.
-      # This command will only succeed if the broker is fully responsive.
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
       timeout: 5s
       retries: 10
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./src:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    # This entry makes 'host.docker.internal' work reliably
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: celery -A core worker -l info
+    volumes:
+      - ./src:/app
+    env_file:
+      - ./.env
+    # This entry makes 'host.docker.internal' work reliably
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
