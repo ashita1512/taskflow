@@ -1,12 +1,10 @@
-# In src/tasks/urls.py
-
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import TaskViewSet
+from .views import LeaveRequestViewSet # Import the renamed viewset
 
 router = DefaultRouter()
-# Add basename='task' to this line to help the router
-router.register(r'tasks', TaskViewSet, basename='task')
+# The endpoint is now 'leave-requests' and uses the correct viewset and basename
+router.register(r'leave-requests', LeaveRequestViewSet, basename='leaverequest')
 
 urlpatterns = [
     path('', include(router.urls)),

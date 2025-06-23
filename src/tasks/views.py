@@ -1,22 +1,55 @@
-# In src/tasks/views.py
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
-from rest_framework import viewsets, permissions
-from .models import Task
-from .serializers import TaskSerializer
-from .tasks import send_creation_notification
+from .models import LeaveRequest
+from .serializers import LeaveRequestSerializer
+from .tasks import send_leave_request_notification
+from .permissions import IsManager # <-- Import our new custom permission
 
-class TaskViewSet(viewsets.ModelViewSet):
-    serializer_class = TaskSerializer
+class LeaveRequestViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows:
+    - Employees to create and view their leave requests.
+    - Managers to view all leave requests and approve/reject them.
+    """
+    serializer_class = LeaveRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return self.request.user.tasks.all().order_by('-created_at')
+        """
+        If the user is a manager, return all leave requests.
+        Otherwise, return only the requests for the currently authenticated user.
+        """
+        if self.request.user.profile.is_manager:
+            return LeaveRequest.objects.all().order_by('-created_at')
+        return self.request.user.leave_requests.all().order_by('-created_at')
 
-    # THIS IS THE METHOD WITH THE FIX
     def perform_create(self, serializer):
-        # This line automatically adds the logged-in user as the owner
-        # before the task is saved to the database.
+        """
+        Set the owner of the leave request to the logged-in user.
+        """
         instance = serializer.save(owner=self.request.user)
-        
-        # This line sends the notification, which runs after the task is saved.
-        send_creation_notification.delay(instance.id, instance.title)
+        send_leave_request_notification.delay(instance.id, instance.owner.username)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsManager])
+    def approve(self, request, pk=None):
+        """
+        Custom action for a Manager to approve a leave request.
+        """
+        leave_request = self.get_object()
+        leave_request.status = 'APPROVED'
+        leave_request.save()
+        # You could trigger another notification task here if you wanted
+        return Response({'status': 'leave request approved'})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsManager])
+    def reject(self, request, pk=None):
+        """
+        Custom action for a Manager to reject a leave request.
+        """
+        leave_request = self.get_object()
+        leave_request.status = 'REJECTED'
+        leave_request.save()
+        return Response({'status': 'leave request rejected'})
+

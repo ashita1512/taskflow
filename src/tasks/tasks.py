@@ -1,15 +1,15 @@
-# In src/tasks/tasks.py
-
 from celery import shared_task
 import time
 
+# The Celery task is renamed for clarity
 @shared_task
-def send_creation_notification(task_id, task_title):
+def send_leave_request_notification(request_id, username):
     """
-    A dummy task that simulates sending an email notification.
+    A dummy task that simulates sending a notification to a manager
+    about a new leave request.
     """
-    print(f"Starting notification for Task ID: {task_id}...")
-    # Simulate a slow network call (e.g., to an email server)
+    print(f"Starting manager notification for Leave Request ID: {request_id}...")
+    # Simulate a slow network call (e.g., to an email or Slack API)
     time.sleep(5) 
-    print(f"Successfully sent notification for task: '{task_title}' (ID: {task_id})")
-    return f"Notification sent for Task ID: {task_id}"
+    print(f"Successfully sent new leave request notification for user: '{username}' (Request ID: {request_id})")
+    return f"Notification sent for Request ID: {request_id}"
