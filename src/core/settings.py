@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'rest_framework',
     # Your apps
     'tasks',
+    'profiles',
 ]
 
 MIDDLEWARE = [
@@ -70,7 +71,6 @@ USE_TZ = True
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Celery Configuration
 CELERY_BROKER_URL = 'amqp://guest:guest@host.docker.internal:5672//'
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True

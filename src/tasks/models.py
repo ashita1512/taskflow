@@ -1,16 +1,27 @@
-# In src/tasks/models.py
-
 from django.db import models
 from django.contrib.auth.models import User
 
-class Task(models.Model):
-    title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    completed = models.BooleanField(default=False)
+# The model is renamed from Task to LeaveRequest
+class LeaveRequest(models.Model):
+    # Choices for the status field
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
+
+    # The owner of the request, linked to Django's User model
+    owner = models.ForeignKey(User, related_name='leave_requests', on_delete=models.CASCADE)
+
+    # New fields specific to a leave request
+    start_date = models.DateField()
+    end_date = models.DateField()
+    reason = models.TextField(blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
-    
-    # This is the line to fix. Make sure it includes related_name='tasks'
-    owner = models.ForeignKey(User, related_name='tasks', on_delete=models.CASCADE)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.title
+        return f"Leave request for {self.owner.username} from {self.start_date}"

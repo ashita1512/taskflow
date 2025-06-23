@@ -1,19 +1,11 @@
-# Environment variables
-# NEVER commit this file!
 .env
 
 # Python junk
 __pycache__/
 *.pyc
-
-# Docker
-# The postgres data volume should not be in the project dir,
-# but this is a good safety measure.
 postgres_data/
 
 # IDE / Editor folders
 .vscode/
 .idea/
-
-# Mac-specific
 .DS_Store

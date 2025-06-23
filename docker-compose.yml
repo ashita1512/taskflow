@@ -1,4 +1,3 @@
-# FINAL VERSION - Using host networking for RabbitMQ
 
 services:
   db:
